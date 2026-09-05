@@ -7,7 +7,7 @@ export const colors = {
     modalBackground: 'rgba(0, 0, 0, 0.75)',
 
     primary: '#00b37e',
-    primaryLight: 'rgba(0, 179, 126, 0.12)',
+    iconSurface: 'rgba(0, 179, 126, 0.12)',
     danger: '#f75a68',
 
     text: {

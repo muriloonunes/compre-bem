@@ -1,19 +1,21 @@
 import {StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {DetalheProduto} from "../components/DetalheProduto";
-import {produtosMock} from "../mocks/produtosMock";
 import {theme} from "../theme/theme";
+import {Produto} from "../types/Produto";
 
 type RootStackParamList = {
-    Lista: undefined;
-    Detalhe: { produtoId: number };
+    ListaProdutos: undefined;
+    DetalheProduto: { produtoId: number };
 };
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Detalhe'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'DetalheProduto'> & {
+    produtos: Produto[];
+};
 
-export default function TelaDetalheProduto({route}: Props) {
+export default function TelaDetalheProduto({route, produtos}: Props) {
     const {produtoId} = route.params;
-    const produto = produtosMock.find((p) => p.id === produtoId);
+    const produto = produtos.find((p) => p.id === produtoId);
 
     if (!produto) {
         return (

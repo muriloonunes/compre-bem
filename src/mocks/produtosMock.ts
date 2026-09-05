@@ -7,7 +7,7 @@ export const produtosMock: Produto[] = [
         preco: 349.9,
         categoria: 'Móveis',
         descricao: 'Cadeira ergonômica com apoio lombar, ideal para home office.',
-        imagem: 'https://placehold.co/100x100',
+        imagem: 'https://picsum.photos/100',
     },
     {
         id: 2,
@@ -15,7 +15,7 @@ export const produtosMock: Produto[] = [
         preco: 589.0,
         categoria: 'Móveis',
         descricao: 'Mesa compacta com acabamento em madeira, cabe em espaços pequenos.',
-        imagem: 'https://placehold.co/100x100',
+        imagem: 'https://picsum.photos/100',
     },
     {
         id: 3,
@@ -23,7 +23,7 @@ export const produtosMock: Produto[] = [
         preco: 79.9,
         categoria: 'Iluminação',
         descricao: 'Luminária LED com intensidade ajustável e braço flexível.',
-        imagem: 'https://placehold.co/100x100',
+        imagem: 'https://picsum.photos/100',
     },
     {
         id: 4,
@@ -31,6 +31,6 @@ export const produtosMock: Produto[] = [
         preco: 129.9,
         categoria: 'Acessórios',
         descricao: 'Suporte ergonômico em alumínio, melhora a ventilação do notebook.',
-        imagem: 'https://placehold.co/100x100',
+        imagem: 'https://picsum.photos/100',
     },
 ];

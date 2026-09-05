@@ -8,46 +8,95 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
-import {theme} from "../theme/theme";
 import {useState} from "react";
+import {theme} from "../theme/theme";
+import type {Produto} from "../types/Produto";
 
 type NovoProdutoModalProps = {
     visible: boolean;
     onClose: () => void;
-    onSave?: () => void
-}
+    onSave: (produto: Produto) => void;
+};
 
-export default function NovoProdutoModal(
-    {visible, onClose, onSave}: NovoProdutoModalProps
-) {
+type ErrosForm = {
+    nome?: string;
+    preco?: string;
+    descricao?: string;
+};
+
+export default function NovoProdutoModal({
+                                             visible,
+                                             onClose,
+                                             onSave,
+                                         }: NovoProdutoModalProps) {
     const [nome, setNome] = useState('');
     const [categoria, setCategoria] = useState('');
     const [preco, setPreco] = useState('');
     const [descricao, setDescricao] = useState('');
-    const [imagem, setImagem] = useState('');
+    const [erros, setErros] = useState<ErrosForm>({});
 
     function limparFormulario() {
         setNome('');
         setCategoria('');
         setPreco('');
         setDescricao('');
-        setImagem('');
+        setErros({});
     }
 
-    function handleClose() {
+    function fechar() {
         limparFormulario();
         onClose();
     }
 
+    function validar(): boolean {
+        const novosErros: ErrosForm = {};
+        const precoLimpo = preco.trim().replace(',', '.');
+        const precoNumerico = Number(precoLimpo);
+
+        if (!nome.trim()) {
+            novosErros.nome = 'O nome do produto é obrigatório.';
+        }
+
+        if (!preco.trim()) {
+            novosErros.preco = 'O preço é obrigatório.';
+        } else if (isNaN(precoNumerico) || precoNumerico <= 0) {
+            novosErros.preco = 'Informe um preço válido maior que zero.';
+        }
+        if (!descricao.trim()) {
+            novosErros.descricao = 'A descrição é obrigatória.';
+        }
+
+        setErros(novosErros);
+        return Object.keys(novosErros).length === 0;
+    }
+
+    function salvar() {
+        if (!validar()) return;
+
+        const precoNumerico = Number(preco.trim().replace(',', '.'));
+
+        const novoProduto: Produto = {
+            id: Date.now(),
+            nome: nome.trim(),
+            categoria: categoria.trim() || 'Geral',
+            preco: Number(precoNumerico.toFixed(2)),
+            descricao: descricao.trim(),
+            imagem: `https://picsum.photos/seed/${Date.now()}/200`,
+        };
+
+        onSave(novoProduto);
+        fechar();
+    }
+
     return (
         <Modal
-            animationType="slide"
+            animationType="fade"
             transparent={true}
             visible={visible}
-            onRequestClose={handleClose}
+            onRequestClose={fechar}
         >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -55,18 +104,22 @@ export default function NovoProdutoModal(
             >
                 <Pressable
                     style={StyleSheet.absoluteFill}
-                    onPress={handleClose}
+                    onPress={fechar}
                 />
                 <View style={styles.modalCard}>
                     <View style={styles.modalHeader}>
                         <View style={styles.modalHeaderTitleGroup}>
                             <View style={styles.modalHeaderIconContainer}>
-                                <MaterialDesignIcons name="package-variant-closed-plus" size={20} color={theme.colors.primary}/>
+                                <MaterialDesignIcons
+                                    name="package-variant-closed-plus"
+                                    size={20}
+                                    color={theme.colors.primary}
+                                />
                             </View>
                             <Text style={styles.modalTitle}>Adicionar Produto</Text>
                         </View>
                         <TouchableOpacity
-                            onPress={handleClose}
+                            onPress={fechar}
                             style={styles.closeButton}
                             hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                         >
@@ -76,17 +129,25 @@ export default function NovoProdutoModal(
 
                     <ScrollView
                         showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
                         contentContainerStyle={styles.formScrollContainer}
                     >
                         <View style={styles.formGroup}>
-                            <Text style={styles.inputLabel}>Nome do Produto</Text>
+                            <Text style={styles.inputLabel}>Nome do Produto *</Text>
                             <TextInput
-                                style={styles.modalInput}
+                                style={[
+                                    styles.modalInput,
+                                    erros.nome ? styles.inputError : null,
+                                ]}
                                 placeholder="Ex: Cadeira Gamer Ergonômica"
                                 placeholderTextColor={theme.colors.text.placeholder}
                                 value={nome}
-                                onChangeText={setNome}
+                                onChangeText={(text) => {
+                                    setNome(text);
+                                    if (erros.nome) setErros((prev) => ({...prev, nome: undefined}));
+                                }}
                             />
+                            {erros.nome ? <Text style={styles.errorText}>{erros.nome}</Text> : null}
                         </View>
 
                         <View style={styles.formRow}>
@@ -102,41 +163,42 @@ export default function NovoProdutoModal(
                             </View>
 
                             <View style={[styles.formGroup, {flex: 1}]}>
-                                <Text style={styles.inputLabel}>Preço (R$)</Text>
+                                <Text style={styles.inputLabel}>Preço (R$) *</Text>
                                 <TextInput
-                                    style={styles.modalInput}
+                                    style={[
+                                        styles.modalInput,
+                                        erros.preco ? styles.inputError : null,
+                                    ]}
                                     placeholder="0,00"
                                     placeholderTextColor={theme.colors.text.placeholder}
                                     keyboardType="numeric"
                                     value={preco}
-                                    onChangeText={setPreco}
+                                    onChangeText={(text) => {
+                                        setPreco(text);
+                                        if (erros.preco) setErros((prev) => ({...prev, preco: undefined}));
+                                    }}
                                 />
+                                {erros.preco ? <Text style={styles.errorText}>{erros.preco}</Text> : null}
                             </View>
                         </View>
 
                         <View style={styles.formGroup}>
                             <Text style={styles.inputLabel}>Descrição</Text>
                             <TextInput
-                                style={[styles.modalInput, styles.textAreaInput]}
+                                style={[styles.modalInput, styles.textAreaInput,
+                                    erros.descricao ? styles.inputError : null,
+                                ]}
                                 placeholder="Breve descrição e detalhes do produto..."
                                 placeholderTextColor={theme.colors.text.placeholder}
                                 multiline={true}
                                 numberOfLines={3}
                                 textAlignVertical="top"
                                 value={descricao}
-                                onChangeText={setDescricao}
-                            />
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.inputLabel}>URL da Imagem</Text>
-                            <TextInput
-                                style={styles.modalInput}
-                                placeholder="https://exemplo.com/imagem.png"
-                                placeholderTextColor={theme.colors.text.placeholder}
-                                autoCapitalize="none"
-                                value={imagem}
-                                onChangeText={setImagem}
+                                onChangeText={(text) => {
+                                    setDescricao(text);
+                                    if (erros.descricao) setErros((prev) => ({...prev, descricao: undefined}));
+                                }
+                                }
                             />
                         </View>
                     </ScrollView>
@@ -144,7 +206,7 @@ export default function NovoProdutoModal(
                     <View style={styles.modalFooter}>
                         <TouchableOpacity
                             style={styles.buttonCancel}
-                            onPress={handleClose}
+                            onPress={fechar}
                             activeOpacity={0.7}
                         >
                             <Text style={styles.buttonCancelText}>Cancelar</Text>
@@ -152,7 +214,7 @@ export default function NovoProdutoModal(
 
                         <TouchableOpacity
                             style={styles.buttonSave}
-                            onPress={handleClose}
+                            onPress={salvar}
                             activeOpacity={0.8}
                         >
                             <MaterialDesignIcons name="check" size={18} color={theme.colors.text.contrast}/>
@@ -205,7 +267,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: theme.borderRadius.md,
-        backgroundColor: theme.colors.primaryLight,
+        backgroundColor: theme.colors.iconSurface,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -238,6 +300,14 @@ const styles = StyleSheet.create({
         fontSize: theme.fontSize.sm,
         fontWeight: '600',
         marginBottom: 6,
+    },
+    inputError: {
+        borderColor: theme.colors.danger,
+    },
+    errorText: {
+        color: theme.colors.danger,
+        fontSize: theme.fontSize.xs,
+        marginTop: 4,
     },
     modalInput: {
         backgroundColor: theme.colors.background,

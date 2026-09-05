@@ -3,27 +3,30 @@ import {FlatList, Pressable, StyleSheet, Text, TextInput,} from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
-import {produtosMock} from "../mocks/produtosMock";
 import {theme} from "../theme/theme";
 import {ProdutoItem} from "../components/ProdutoItem";
 import NovoProdutoModal from "../components/NovoProdutoModal";
+import {Produto} from "../types/Produto";
 
 type RootStackParamList = {
-    Lista: undefined;
-    Detalhe: { produtoId: number };
+    ListaProdutos: undefined;
+    DetalheProduto: { produtoId: number };
 };
 
 type Props = {
-    navigation: NativeStackNavigationProp<RootStackParamList, 'Lista'>;
+    navigation: NativeStackNavigationProp<RootStackParamList, 'ListaProdutos'>;
+    produtos: Produto[];
+    onAdicionarProduto: (produto: Produto) => void;
 };
 
-export default function TelaListaProdutos({navigation}: Props) {
+export default function TelaListaProdutos({navigation, produtos, onAdicionarProduto}: Props) {
     const [busca, setBusca] = useState('');
+
     const produtosFiltrados = useMemo(() => {
-        return produtosMock.filter((produto) =>
+        return produtos.filter((produto) =>
             produto.nome.toLowerCase().includes(busca.toLowerCase())
         );
-    }, [busca]);
+    }, [busca, produtos]);
 
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -31,7 +34,8 @@ export default function TelaListaProdutos({navigation}: Props) {
         <SafeAreaView style={styles.container}>
             <NovoProdutoModal
                 visible={modalVisible}
-                onClose={() => setModalVisible(false)}/>
+                onClose={() => setModalVisible(false)}
+                onSave={onAdicionarProduto}/>
             <Text style={styles.titleText}>Catálogo</Text>
             <TextInput
                 style={styles.inputBusca}
@@ -56,7 +60,7 @@ export default function TelaListaProdutos({navigation}: Props) {
                     <ProdutoItem
                         produto={item}
                         onPress={() =>
-                            navigation.navigate('Detalhe', {produtoId: item.id})
+                            navigation.navigate('DetalheProduto', {produtoId: item.id})
                         }
                     />
                 )}

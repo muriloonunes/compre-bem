@@ -4,9 +4,9 @@ import type {Produto} from '../types/Produto';
 import {theme} from "../theme/theme";
 
 export function ProdutoItem({
-                         produto,
-                         onPress,
-                     }: {
+                                produto,
+                                onPress,
+                            }: {
     produto: Produto;
     onPress: () => void;
 }) {
