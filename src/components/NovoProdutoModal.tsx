@@ -132,7 +132,7 @@ export default function NovoProdutoModal({
                         keyboardShouldPersistTaps="handled"
                         contentContainerStyle={styles.formScrollContainer}
                     >
-                        <View style={styles.formGroup}>
+                        <View style={styles.formCol}>
                             <Text style={styles.inputLabel}>Nome do Produto *</Text>
                             <TextInput
                                 style={[
@@ -151,7 +151,7 @@ export default function NovoProdutoModal({
                         </View>
 
                         <View style={styles.formRow}>
-                            <View style={[styles.formGroup, {flex: 1}]}>
+                            <View style={styles.formCol}>
                                 <Text style={styles.inputLabel}>Categoria</Text>
                                 <TextInput
                                     style={styles.modalInput}
@@ -162,7 +162,7 @@ export default function NovoProdutoModal({
                                 />
                             </View>
 
-                            <View style={[styles.formGroup, {flex: 1}]}>
+                            <View style={styles.formCol}>
                                 <Text style={styles.inputLabel}>Preço (R$) *</Text>
                                 <TextInput
                                     style={[
@@ -182,7 +182,7 @@ export default function NovoProdutoModal({
                             </View>
                         </View>
 
-                        <View style={styles.formGroup}>
+                        <View style={styles.formCol}>
                             <Text style={styles.inputLabel}>Descrição</Text>
                             <TextInput
                                 style={[styles.modalInput, styles.textAreaInput,
@@ -277,8 +277,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     closeButton: {
-        width: 32,
-        height: 32,
+        width: 44,
+        height: 44,
         borderRadius: theme.borderRadius.md,
         backgroundColor: theme.colors.cardBorder,
         alignItems: 'center',
@@ -288,11 +288,14 @@ const styles = StyleSheet.create({
         paddingTop: theme.spacing.lg,
         paddingBottom: theme.spacing.sm,
     },
-    formGroup: {
+    formCol: {
+        flexGrow: 1,
+        minWidth: 140,
         marginBottom: 14,
     },
     formRow: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: theme.spacing.md,
     },
     inputLabel: {
@@ -327,6 +330,7 @@ const styles = StyleSheet.create({
     modalFooter: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
+        flexWrap: 'wrap',
         alignItems: 'center',
         gap: 10,
         marginTop: theme.spacing.md,
@@ -335,7 +339,10 @@ const styles = StyleSheet.create({
         borderTopColor: theme.colors.cardBorder,
     },
     buttonCancel: {
-        paddingVertical: 10,
+        minHeight: 44,
+        minWidth: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
         borderRadius: theme.borderRadius.md,
         backgroundColor: theme.colors.cardBorder,
@@ -346,11 +353,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     buttonSave: {
+        minHeight: 44,
+        minWidth: 44,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
-        paddingVertical: 10,
-        paddingHorizontal: 18,
+        paddingHorizontal: theme.spacing.lg,
         borderRadius: theme.borderRadius.md,
         backgroundColor: theme.colors.primary,
     },

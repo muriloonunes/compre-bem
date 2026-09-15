@@ -97,10 +97,13 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: theme.spacing.lg,
         marginTop: theme.spacing.lg,
+        width: '100%',
     },
     inputBusca: {
         backgroundColor: theme.colors.cardBackground,
         color: theme.colors.text.title,
+        minHeight: 44,
+        maxHeight: 50,
         height: 50,
         borderRadius: theme.borderRadius.md,
         paddingHorizontal: theme.spacing.lg,
@@ -114,5 +117,7 @@ const styles = StyleSheet.create({
     listaContainer: {
         padding: theme.spacing.lg,
         paddingBottom: theme.spacing.xxl,
+        width: '100%',
+        alignSelf: 'center',
     },
 });

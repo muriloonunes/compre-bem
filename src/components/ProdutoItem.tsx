@@ -67,6 +67,7 @@ export function ProdutoItem({
 
 const styles = StyleSheet.create({
     card: {
+        minHeight: 44,
         backgroundColor: theme.colors.cardBackground,
         borderRadius: theme.borderRadius.lg,
         padding: 10,
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
     },
     imagem: {
         width: 64,
-        height: 64,
+        aspectRatio: 1,
         borderRadius: theme.borderRadius.md,
         backgroundColor: theme.colors.cardBorder,
     },
@@ -124,10 +125,13 @@ const styles = StyleSheet.create({
     actionsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: theme.spacing.sm,
+        gap: theme.spacing.xs,
     },
     favoritoButton: {
-        padding: 6,
+        minWidth: 44,
+        minHeight: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: theme.colors.cardBorder,
         borderRadius: theme.borderRadius.sm,
     },
@@ -135,18 +139,21 @@ const styles = StyleSheet.create({
         fontSize: theme.fontSize.lg,
     },
     quantidadeButton: {
-        paddingHorizontal: 10,
-        paddingVertical: theme.spacing.xs,
+        minWidth: 44,
+        minHeight: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: theme.colors.cardBorder,
         borderRadius: theme.borderRadius.sm,
     },
     quantidadeButtonText: {
         color: theme.colors.text.title,
         fontWeight: 'bold',
+        fontSize: theme.fontSize.lg,
     },
     quantidadeText: {
         color: theme.colors.text.title,
-        minWidth: theme.spacing.lg,
+        minWidth: 28,
         textAlign: 'center',
     },
 });
