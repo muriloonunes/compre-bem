@@ -1,12 +1,15 @@
-import {useMemo, useState} from 'react';
-import {FlatList, Pressable, StyleSheet, Text, TextInput,} from 'react-native';
+import {useEffect, useMemo, useState} from 'react';
+import {FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {theme} from "../theme/theme";
 import {ProdutoItem} from "../components/ProdutoItem";
 import NovoProdutoModal from "../components/NovoProdutoModal";
 import {Produto} from "../types/Produto";
+
+const CHAVE_HISTORICO = '@compre-bem:historico_busca';
 
 type RootStackParamList = {
     ListaProdutos: undefined;
@@ -21,6 +24,26 @@ type Props = {
 
 export default function TelaListaProdutos({navigation, produtos, onAdicionarProduto}: Props) {
     const [busca, setBusca] = useState('');
+    const [historico, setHistorico] = useState<string[]>([]);
+    const [modalVisible, setModalVisible] = useState(false);
+
+    useEffect(() => {
+        AsyncStorage.getItem(CHAVE_HISTORICO).then((salvo) => {
+            if (salvo) setHistorico(JSON.parse(salvo));
+        });
+    }, []);
+
+    function salvarHistorico(termo: string) {
+        const termoLimpo = termo.trim();
+        if (!termoLimpo) return;
+
+        setHistorico((atual) => {
+            const semDuplicado = atual.filter((item) => item.toLowerCase() !== termoLimpo.toLowerCase());
+            const novo = [termoLimpo, ...semDuplicado].slice(0, 5);
+            AsyncStorage.setItem(CHAVE_HISTORICO, JSON.stringify(novo));
+            return novo;
+        });
+    }
 
     const produtosFiltrados = useMemo(() => {
         return produtos.filter((produto) =>
@@ -28,14 +51,13 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
         );
     }, [busca, produtos]);
 
-    const [modalVisible, setModalVisible] = useState(false);
-
     return (
         <SafeAreaView style={styles.container}>
             <NovoProdutoModal
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
-                onSave={onAdicionarProduto}/>
+                onSave={onAdicionarProduto}
+            />
             <Text style={styles.titleText}>Catálogo</Text>
             <TextInput
                 style={styles.inputBusca}
@@ -43,7 +65,29 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
                 placeholderTextColor={theme.colors.text.placeholder}
                 value={busca}
                 onChangeText={setBusca}
+                returnKeyType="search"
+                onSubmitEditing={() => salvarHistorico(busca)}
             />
+
+            {historico.length > 0 && (
+                <View style={styles.historicoWrapper}>
+                    <View style={styles.historicoHeader}>
+                        <Text style={styles.historicoLabel}>Buscas recentes:</Text>
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsContainer}>
+                        {historico.map((item, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.chip}
+                                onPress={() => setBusca(item)}
+                            >
+                                <Text style={styles.chipText}>{item}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
+
             <Pressable
                 style={styles.floatingButton}
                 onPress={() => {
@@ -56,8 +100,7 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
                 contentContainerStyle={styles.listaContainer}
                 data={produtosFiltrados}
                 keyExtractor={(item) => String(item.id)}
-                renderItem={({item}) => (
-                    <ProdutoItem
+                renderItem={({item}) => (                    <ProdutoItem
                         produto={item}
                         onPress={() =>
                             navigation.navigate('DetalheProduto', {produtoId: item.id})
@@ -113,6 +156,40 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.sm,
         borderWidth: 1,
         borderColor: theme.colors.cardBorder,
+    },
+    historicoWrapper: {
+        marginHorizontal: theme.spacing.lg,
+        marginBottom: theme.spacing.sm,
+    },
+    historicoHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.xs,
+    },
+    historicoLabel: {
+        fontSize: theme.fontSize.xs,
+        color: theme.colors.text.muted,
+    },
+    limparText: {
+        fontSize: theme.fontSize.xs,
+        color: theme.colors.danger,
+    },
+    chipsContainer: {
+        gap: theme.spacing.xs,
+        paddingVertical: 2,
+    },
+    chip: {
+        backgroundColor: theme.colors.cardBackground,
+        paddingVertical: 6,
+        paddingHorizontal: theme.spacing.md,
+        borderRadius: theme.borderRadius.full,
+        borderWidth: 1,
+        borderColor: theme.colors.cardBorder,
+    },
+    chipText: {
+        color: theme.colors.text.body,
+        fontSize: theme.fontSize.sm,
     },
     listaContainer: {
         padding: theme.spacing.lg,
