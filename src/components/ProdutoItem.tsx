@@ -1,7 +1,10 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import type {Produto} from '../types/Produto';
 import {theme} from "../theme/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage/src/AsyncStorage";
+
+const CHAVE_FAVORITOS = '@compre-bem:favoritos';
 
 export function ProdutoItem({
                                 produto,
@@ -10,8 +13,22 @@ export function ProdutoItem({
     produto: Produto;
     onPress: () => void;
 }) {
-    const [favorito, setFavorito] = useState(false);
+    const [favoritos, setFavoritos] = useState<number[]>([]);
     const [quantidade, setQuantidade] = useState(0);
+
+    useEffect(() => {
+        AsyncStorage.getItem(CHAVE_FAVORITOS).then((salvo) => {
+            if (salvo) setFavoritos(JSON.parse(salvo));
+        });
+    }, []);
+
+    function alternarFavorito(id: number) {
+        setFavoritos((atual) => {
+            const novo = atual.includes(id) ? atual.filter((favId) => favId !== id) : [...atual, id];
+            AsyncStorage.setItem(CHAVE_FAVORITOS, JSON.stringify(novo));
+            return novo;
+        });
+    }
 
     return (
         <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
@@ -32,16 +49,16 @@ export function ProdutoItem({
                 <Text style={styles.preco}>R$ {produto.preco.toFixed(2)}</Text>
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity
-                        onPress={() => setFavorito(!favorito)}
+                        onPress={() => alternarFavorito(produto.id)}
                         style={styles.favoritoButton}
                     >
                         <Text
                             style={[
                                 styles.favoritoIcon,
-                                {color: favorito ? theme.colors.danger : theme.colors.text.muted}
+                                {color: favoritos ? theme.colors.danger : theme.colors.text.muted}
                             ]}
                         >
-                            {favorito ? '♥' : '♡'}
+                            {favoritos.includes(produto.id) ? '♥' : '♡'}
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
