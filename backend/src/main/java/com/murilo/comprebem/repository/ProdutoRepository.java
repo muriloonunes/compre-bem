@@ -1,10 +1,10 @@
 package com.murilo.comprebem.repository;
 
 import com.murilo.comprebem.entity.Produto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  *
@@ -14,5 +14,5 @@ import java.util.List;
  */
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
-    List<Produto> findAllByNomeContainingIgnoreCase(String nome);
+    Page<Produto> findAllByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }

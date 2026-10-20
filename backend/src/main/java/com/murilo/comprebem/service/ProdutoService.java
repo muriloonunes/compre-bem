@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  *
@@ -56,11 +55,9 @@ public class ProdutoService {
         );
     }
 
-    public List<ProdutoResponseDTO> buscarPorNome(String nome) {
-        return produtoRepository.findAllByNomeContainingIgnoreCase(nome)
-                .stream()
-                .map(ProdutoResponseDTO::new)
-                .toList();
+    public Page<ProdutoResponseDTO> buscarPorNome(String nome, Pageable pageable) {
+        return produtoRepository.findAllByNomeContainingIgnoreCase(nome, pageable)
+                .map(ProdutoResponseDTO::new);
     }
 
     public ProdutoResponseDTO atualizar(Long id, CriarProdutoDTO produto) {

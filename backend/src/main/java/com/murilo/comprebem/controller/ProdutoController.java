@@ -13,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  *
  * @author Murilo Nunes <murilo_no@outlook.com>
@@ -34,26 +32,28 @@ public class ProdutoController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProdutoResponseDTO>> listarTodos(
+    public ResponseEntity<Page<ProdutoResponseDTO>> listar(
+            @RequestParam(required = false) String busca,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         if (pageable.getPageSize() > 50) {
             pageable = PageRequest.of(pageable.getPageNumber(), 50, pageable.getSort());
         }
-        var produtos = produtoService.listarTodos(pageable);
+
+        Page<ProdutoResponseDTO> produtos;
+
+        if (busca != null && !busca.trim().isEmpty()) {
+            produtos = produtoService.buscarPorNome(busca.toLowerCase(), pageable);
+        } else {
+            produtos = produtoService.listarTodos(pageable);
+        }
+
         return ResponseEntity.ok().body(produtos);
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoResponseDTO> obterPorId(@PathVariable Long id) {
         var produto = produtoService.buscar(id);
         return ResponseEntity.ok().body(produto);
-    }
-
-    @GetMapping("/buscar/{nome}")
-    public ResponseEntity<List<ProdutoResponseDTO>> buscarPorNome(@PathVariable String nome) {
-        var produtos = produtoService.buscarPorNome(nome);
-        return ResponseEntity.ok().body(produtos);
     }
 
     @DeleteMapping("/{id}")
