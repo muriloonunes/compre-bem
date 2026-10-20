@@ -18,7 +18,7 @@ import java.util.List;
  * @brief Class ProdutoController
  */
 @RestController
-@RequestMapping("/api/produtos")
+@RequestMapping("api/v1/produtos")
 @RequiredArgsConstructor
 public class ProdutoController {
     private final ProdutoService produtoService;
