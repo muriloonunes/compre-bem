@@ -5,6 +5,10 @@ import com.murilo.comprebem.entity.dto.ProdutoResponseDTO;
 import com.murilo.comprebem.service.ProdutoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +34,13 @@ public class ProdutoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
-        var produtos = produtoService.listarTodos();
+    public ResponseEntity<Page<ProdutoResponseDTO>> listarTodos(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        if (pageable.getPageSize() > 50) {
+            pageable = PageRequest.of(pageable.getPageNumber(), 50, pageable.getSort());
+        }
+        var produtos = produtoService.listarTodos(pageable);
         return ResponseEntity.ok().body(produtos);
     }
 

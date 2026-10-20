@@ -6,6 +6,8 @@ import com.murilo.comprebem.entity.dto.ProdutoResponseDTO;
 import com.murilo.comprebem.exception.EntidadeNotFound;
 import com.murilo.comprebem.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -38,9 +40,9 @@ public class ProdutoService {
         return new ProdutoResponseDTO(produto);
     }
 
-    public List<ProdutoResponseDTO> listarTodos() {
-        var produtos = produtoRepository.findAll();
-        return produtos.stream().map(ProdutoResponseDTO::new).toList();
+    public Page<ProdutoResponseDTO> listarTodos(Pageable pageable) {
+        var produtos = produtoRepository.findAll(pageable);
+        return produtos.map(ProdutoResponseDTO::new);
     }
 
     public ProdutoResponseDTO buscar(Long id) {
