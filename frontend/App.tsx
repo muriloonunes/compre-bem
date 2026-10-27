@@ -5,8 +5,6 @@ import TelaListaProdutos from './src/screens/TelaListaProdutos';
 import TelaDetalheProduto from './src/screens/TelaDetalheProduto';
 import {theme} from './src/theme/theme';
 import {produtosMock} from "./src/mocks/produtosMock";
-import {Produto} from "./src/types/Produto";
-import {useState} from "react";
 
 export type RootStackParamList = {
     ListaProdutos: undefined;
@@ -16,12 +14,6 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
-    const [produtos, setProdutos] = useState<Produto[]>(produtosMock);
-
-    function adicionarProduto(novoProduto: Produto) {
-        setProdutos((atual) => [novoProduto, ...atual]);
-    }
-
     return (
         <NavigationContainer>
             <StatusBar style="light"/>
@@ -34,22 +26,16 @@ export default function App() {
                     contentStyle: {backgroundColor: theme.colors.background},
                 }}
             >
-                <Stack.Screen name="ListaProdutos"
-                              options={{headerShown: false}}>
-                    {(props) => (
-                        <TelaListaProdutos
-                            {...props}
-                            produtos={produtos}
-                            onAdicionarProduto={adicionarProduto}
-                        />
-                    )}
-
-                </Stack.Screen>
+                <Stack.Screen
+                    name="ListaProdutos"
+                    component={TelaListaProdutos}
+                    options={{headerShown: false}}
+                />
                 <Stack.Screen name="DetalheProduto">
                     {(props) => (
                         <TelaDetalheProduto
                             {...props}
-                            produtos={produtos}
+                            produtos={produtosMock}
                         />
                     )}
                 </Stack.Screen>

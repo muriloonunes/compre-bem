@@ -1,5 +1,16 @@
-import {useEffect, useMemo, useState} from 'react';
-import {FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
@@ -8,24 +19,47 @@ import {theme} from "../theme/theme";
 import {ProdutoItem} from "../components/ProdutoItem";
 import NovoProdutoModal from "../components/NovoProdutoModal";
 import {Produto} from "../types/Produto";
+import {getProdutos} from "../service/produtoService";
+import {RootStackParamList} from "../../App";
 
 const CHAVE_HISTORICO = '@compre-bem:historico_busca';
 
-type RootStackParamList = {
-    ListaProdutos: undefined;
-    DetalheProduto: { produtoId: number };
-};
-
 type Props = {
     navigation: NativeStackNavigationProp<RootStackParamList, 'ListaProdutos'>;
-    produtos: Produto[];
-    onAdicionarProduto: (produto: Produto) => void;
 };
 
-export default function TelaListaProdutos({navigation, produtos, onAdicionarProduto}: Props) {
+export default function TelaListaProdutos({navigation}: Props) {
+    const [produtos, setProdutos] = useState<Produto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [erro, setErro] = useState<string | null>(null);
     const [busca, setBusca] = useState('');
     const [historico, setHistorico] = useState<string[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
+
+    const carregarProdutos = useCallback(async (isRefresh = false) => {
+        try {
+            if (isRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
+            setErro(null);
+
+            const resposta = await getProdutos();
+            setProdutos(resposta.content ?? []);
+        } catch (err: any) {
+            console.error('Erro ao buscar produtos:', err);
+            setErro('Não foi possível carregar os produtos.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        carregarProdutos();
+    }, [carregarProdutos]);
 
     useEffect(() => {
         AsyncStorage.getItem(CHAVE_HISTORICO).then((salvo) => {
@@ -45,6 +79,10 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
         });
     }
 
+    function handleAdicionarProduto(novoProduto: Produto) {
+        setProdutos((atuais) => [novoProduto, ...atuais]);
+    }
+
     const produtosFiltrados = useMemo(() => {
         return produtos.filter((produto) =>
             produto.nome.toLowerCase().includes(busca.toLowerCase())
@@ -56,7 +94,7 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
             <NovoProdutoModal
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
-                onSave={onAdicionarProduto}
+                onSave={handleAdicionarProduto}
             />
             <Text style={styles.titleText}>Catálogo</Text>
             <TextInput
@@ -74,7 +112,8 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
                     <View style={styles.historicoHeader}>
                         <Text style={styles.historicoLabel}>Buscas recentes:</Text>
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsContainer}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.chipsContainer}>
                         {historico.map((item, index) => (
                             <TouchableOpacity
                                 key={index}
@@ -96,18 +135,46 @@ export default function TelaListaProdutos({navigation, produtos, onAdicionarProd
             >
                 <MaterialDesignIcons name='plus' color={theme.colors.text.contrast} size={32}/>
             </Pressable>
-            <FlatList
-                contentContainerStyle={styles.listaContainer}
-                data={produtosFiltrados}
-                keyExtractor={(item) => String(item.id)}
-                renderItem={({item}) => (                    <ProdutoItem
-                        produto={item}
-                        onPress={() =>
-                            navigation.navigate('DetalheProduto', {produtoId: item.id})
-                        }
-                    />
-                )}
-            />
+
+            {loading ? (
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color={theme.colors.primary}/>
+                </View>
+            ) : erro && produtos.length === 0 ? (
+                <View style={styles.centerContainer}>
+                    <Text style={styles.errorText}>{erro}</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={() => carregarProdutos()}>
+                        <Text style={styles.retryButtonText}>Tentar novamente</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <FlatList
+                    contentContainerStyle={styles.listaContainer}
+                    data={produtosFiltrados}
+                    keyExtractor={(item) => String(item.id)}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={() => carregarProdutos(true)}
+                            tintColor={theme.colors.primary}
+                            colors={[theme.colors.primary]}
+                        />
+                    }
+                    ListEmptyComponent={
+                        <Text style={styles.emptyText}>
+                            {busca ? 'Nenhum produto encontrado.' : 'Nenhum produto disponível.'}
+                        </Text>
+                    }
+                    renderItem={({item}) => (
+                        <ProdutoItem
+                            produto={item}
+                            onPress={() =>
+                                navigation.navigate('DetalheProduto', {produtoId: item.id})
+                            }
+                        />
+                    )}
+                />
+            )}
         </SafeAreaView>
     );
 }
@@ -196,5 +263,34 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.xxl,
         width: '100%',
         alignSelf: 'center',
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: theme.spacing.lg,
+    },
+    errorText: {
+        color: theme.colors.danger,
+        fontSize: theme.fontSize.md,
+        textAlign: 'center',
+        marginBottom: theme.spacing.md,
+    },
+    retryButton: {
+        backgroundColor: theme.colors.primary,
+        paddingHorizontal: theme.spacing.lg,
+        paddingVertical: theme.spacing.sm,
+        borderRadius: theme.borderRadius.md,
+    },
+    retryButtonText: {
+        color: theme.colors.text.contrast,
+        fontWeight: 'bold',
+        fontSize: theme.fontSize.sm,
+    },
+    emptyText: {
+        color: theme.colors.text.muted,
+        fontSize: theme.fontSize.md,
+        textAlign: 'center',
+        marginTop: theme.spacing.xxl,
     },
 });

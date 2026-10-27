@@ -8,6 +8,7 @@ export const produtosMock: Produto[] = [
         categoria: 'Móveis',
         descricao: 'Cadeira ergonômica com apoio lombar, ideal para home office.',
         imagem: 'https://picsum.photos/100',
+        quantidade: 3,
     },
     {
         id: 2,
@@ -16,6 +17,7 @@ export const produtosMock: Produto[] = [
         categoria: 'Móveis',
         descricao: 'Mesa compacta com acabamento em madeira, cabe em espaços pequenos.',
         imagem: 'https://picsum.photos/100',
+        quantidade: 5
     },
     {
         id: 3,
@@ -24,6 +26,7 @@ export const produtosMock: Produto[] = [
         categoria: 'Iluminação',
         descricao: 'Luminária LED com intensidade ajustável e braço flexível.',
         imagem: 'https://picsum.photos/100',
+        quantidade: 9
     },
     {
         id: 4,
@@ -32,5 +35,6 @@ export const produtosMock: Produto[] = [
         categoria: 'Acessórios',
         descricao: 'Suporte ergonômico em alumínio, melhora a ventilação do notebook.',
         imagem: 'https://picsum.photos/100',
+        quantidade: 1
     },
 ];
