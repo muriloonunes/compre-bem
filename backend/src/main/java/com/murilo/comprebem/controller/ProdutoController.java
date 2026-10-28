@@ -34,7 +34,7 @@ public class ProdutoController {
 
     @GetMapping
     public ResponseEntity<Page<ProdutoResponseDTO>> listar(
-            @RequestParam(required = false) String busca,
+            @RequestParam(required = false) String filtro,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         if (pageable.getPageSize() > 50) {
@@ -43,14 +43,15 @@ public class ProdutoController {
 
         Page<ProdutoResponseDTO> produtos;
 
-        if (busca != null && !busca.trim().isEmpty()) {
-            produtos = produtoService.buscarPorNome(busca.toLowerCase(), pageable);
+        if (filtro != null && !filtro.trim().isEmpty()) {
+            produtos = produtoService.buscarPorNome(filtro.toLowerCase(), pageable);
         } else {
             produtos = produtoService.listarTodos(pageable);
         }
 
         return ResponseEntity.ok().body(produtos);
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoResponseDTO> obterPorId(@PathVariable Long id) {
         var produto = produtoService.buscar(id);

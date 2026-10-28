@@ -5,7 +5,8 @@ import {Page} from "../types/api";
 export function getProdutos(
     page = 0,
     size = 20,
-    sort = "id,asc"
+    sort = "id,asc",
+    filtro?: string
 ): Promise<Page<Produto>> {
     const params = new URLSearchParams({
         page: page.toString(),
@@ -13,5 +14,9 @@ export function getProdutos(
         sort: sort,
     });
 
-    return apiFetch<Page<Produto>>('/api/v1/produtos?' + params.toString());
+    if (filtro && filtro.trim() !== "") {
+        params.append("filtro", filtro);
+    }
+
+    return apiFetch<Page<Produto>>(`/api/v1/produtos?${params.toString()}`);
 }

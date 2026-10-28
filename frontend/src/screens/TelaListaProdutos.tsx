@@ -37,7 +37,7 @@ export default function TelaListaProdutos({navigation}: Props) {
     const [historico, setHistorico] = useState<string[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const carregarProdutos = useCallback(async (isRefresh = false) => {
+    const carregarProdutos = useCallback(async (isRefresh = false, busca?: string) => {
         try {
             if (isRefresh) {
                 setRefreshing(true);
@@ -46,7 +46,7 @@ export default function TelaListaProdutos({navigation}: Props) {
             }
             setErro(null);
 
-            const resposta = await getProdutos();
+            const resposta = await getProdutos(0, 20, 'id,asc', busca);
             setProdutos(resposta.content ?? []);
         } catch (err: any) {
             console.error('Erro ao buscar produtos:', err);
@@ -59,7 +59,7 @@ export default function TelaListaProdutos({navigation}: Props) {
 
     useEffect(() => {
         carregarProdutos();
-    }, [carregarProdutos]);
+    }, [carregarProdutos, busca]);
 
     useEffect(() => {
         AsyncStorage.getItem(CHAVE_HISTORICO).then((salvo) => {
@@ -82,12 +82,6 @@ export default function TelaListaProdutos({navigation}: Props) {
     function handleAdicionarProduto(novoProduto: Produto) {
         setProdutos((atuais) => [novoProduto, ...atuais]);
     }
-
-    const produtosFiltrados = useMemo(() => {
-        return produtos.filter((produto) =>
-            produto.nome.toLowerCase().includes(busca.toLowerCase())
-        );
-    }, [busca, produtos]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -150,7 +144,7 @@ export default function TelaListaProdutos({navigation}: Props) {
             ) : (
                 <FlatList
                     contentContainerStyle={styles.listaContainer}
-                    data={produtosFiltrados}
+                    data={produtos}
                     keyExtractor={(item) => String(item.id)}
                     refreshControl={
                         <RefreshControl
