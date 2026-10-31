@@ -30,8 +30,8 @@ type Props = {
 
 export default function TelaListaProdutos({navigation}: Props) {
     const [produtos, setProdutos] = useState<Produto[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+    const [carregando, setCarregando] = useState(true);
+    const [atualizando, setAtualizando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
     const [busca, setBusca] = useState('');
     const [historico, setHistorico] = useState<string[]>([]);
@@ -40,9 +40,9 @@ export default function TelaListaProdutos({navigation}: Props) {
     const carregarProdutos = useCallback(async (isRefresh = false) => {
         try {
             if (isRefresh) {
-                setRefreshing(true);
+                setAtualizando(true);
             } else {
-                setLoading(true);
+                setCarregando(true);
             }
             setErro(null);
 
@@ -52,8 +52,8 @@ export default function TelaListaProdutos({navigation}: Props) {
             console.error('Erro ao buscar produtos:', err);
             setErro('Não foi possível carregar os produtos.');
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            setCarregando(false);
+            setAtualizando(false);
         }
     }, [busca]);
 
@@ -185,7 +185,7 @@ export default function TelaListaProdutos({navigation}: Props) {
                 <MaterialDesignIcons name='plus' color={theme.colors.text.contrast} size={32}/>
             </Pressable>
 
-            {loading ? (
+            {carregando ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color={theme.colors.primary}/>
                 </View>
@@ -203,7 +203,7 @@ export default function TelaListaProdutos({navigation}: Props) {
                     keyExtractor={(item) => String(item.id)}
                     refreshControl={
                         <RefreshControl
-                            refreshing={refreshing}
+                            refreshing={atualizando}
                             onRefresh={() => carregarProdutos(true)}
                             tintColor={theme.colors.primary}
                             colors={[theme.colors.primary]}

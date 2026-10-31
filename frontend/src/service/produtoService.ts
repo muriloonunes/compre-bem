@@ -20,3 +20,7 @@ export function getProdutos(
 
     return apiFetch<Page<Produto>>(`/api/v1/produtos?${params.toString()}`);
 }
+
+export function getProdutoById(produtoId: number): Promise<Produto> {
+    return apiFetch<Produto>(`/api/v1/produtos/${produtoId}`);
+}

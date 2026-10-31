@@ -4,7 +4,6 @@ import {StatusBar} from 'expo-status-bar';
 import TelaListaProdutos from './src/screens/TelaListaProdutos';
 import TelaDetalheProduto from './src/screens/TelaDetalheProduto';
 import {theme} from './src/theme/theme';
-import {produtosMock} from "./src/mocks/produtosMock";
 
 export type RootStackParamList = {
     ListaProdutos: undefined;
@@ -35,7 +34,6 @@ export default function App() {
                     {(props) => (
                         <TelaDetalheProduto
                             {...props}
-                            produtos={produtosMock}
                         />
                     )}
                 </Stack.Screen>
