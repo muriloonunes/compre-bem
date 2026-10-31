@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -37,7 +37,7 @@ export default function TelaListaProdutos({navigation}: Props) {
     const [historico, setHistorico] = useState<string[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const carregarProdutos = useCallback(async (isRefresh = false, busca?: string) => {
+    const carregarProdutos = useCallback(async (isRefresh = false) => {
         try {
             if (isRefresh) {
                 setRefreshing(true);
@@ -55,11 +55,19 @@ export default function TelaListaProdutos({navigation}: Props) {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [busca]);
 
     useEffect(() => {
         carregarProdutos();
-    }, [carregarProdutos, busca]);
+    }, [carregarProdutos]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            carregarProdutos();
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [busca]);
 
     useEffect(() => {
         AsyncStorage.getItem(CHAVE_HISTORICO).then((salvo) => {
@@ -79,6 +87,11 @@ export default function TelaListaProdutos({navigation}: Props) {
         });
     }
 
+    function limparHistorico() {
+        AsyncStorage.removeItem(CHAVE_HISTORICO);
+        setHistorico([]);
+    }
+
     function handleAdicionarProduto(novoProduto: Produto) {
         setProdutos((atuais) => [novoProduto, ...atuais]);
     }
@@ -91,31 +104,73 @@ export default function TelaListaProdutos({navigation}: Props) {
                 onSave={handleAdicionarProduto}
             />
             <Text style={styles.titleText}>Catálogo</Text>
-            <TextInput
-                style={styles.inputBusca}
-                placeholder="Buscar produtos"
-                placeholderTextColor={theme.colors.text.placeholder}
-                value={busca}
-                onChangeText={setBusca}
-                returnKeyType="search"
-                onSubmitEditing={() => salvarHistorico(busca)}
-            />
+            <View style={styles.containerBusca}>
+                <TextInput
+                    style={styles.inputBusca}
+                    placeholder="Buscar produtos"
+                    placeholderTextColor={theme.colors.text.placeholder}
+                    value={busca}
+                    onChangeText={setBusca}
+                    returnKeyType="search"
+                    onSubmitEditing={() => salvarHistorico(busca)}
+                />
+                {busca.length > 0 && (
+                    <Pressable
+                        style={({pressed}) => [
+                            styles.botaoLimpar,
+                            pressed && styles.botaoLimparPressionado,
+                        ]}
+                        onPress={() => setBusca('')}
+                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                        accessibilityRole="button"
+                        accessibilityLabel="Limpar busca"
+                    >
+                        <MaterialDesignIcons
+                            name="close-circle"
+                            size={20}
+                            color={theme.colors.text.muted}
+                        />
+                    </Pressable>
+                )}
+            </View>
 
             {historico.length > 0 && (
                 <View style={styles.historicoWrapper}>
                     <View style={styles.historicoHeader}>
                         <Text style={styles.historicoLabel}>Buscas recentes:</Text>
+
+                        <Pressable
+                            onPress={limparHistorico}
+                            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                            style={({pressed}) => [
+                                styles.botaoLimparHistorico,
+                                pressed && styles.itemPressionado,
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel="Limpar histórico de buscas"
+                        >
+                            <Text style={styles.limparText}>Limpar</Text>
+                        </Pressable>
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.chipsContainer}>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.chipsContainer}
+                    >
                         {historico.map((item, index) => (
-                            <TouchableOpacity
+                            <Pressable
                                 key={index}
-                                style={styles.chip}
+                                style={({pressed}) => [
+                                    styles.chip,
+                                    pressed && styles.itemPressionado,
+                                ]}
                                 onPress={() => setBusca(item)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Buscar por ${item}`}
                             >
                                 <Text style={styles.chipText}>{item}</Text>
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </View>
@@ -203,20 +258,35 @@ const styles = StyleSheet.create({
         marginTop: theme.spacing.lg,
         width: '100%',
     },
-    inputBusca: {
+    containerBusca: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: theme.colors.cardBackground,
-        color: theme.colors.text.title,
-        minHeight: 44,
-        maxHeight: 50,
         height: 50,
         borderRadius: theme.borderRadius.md,
-        paddingHorizontal: theme.spacing.lg,
-        fontSize: theme.fontSize.lg,
+        paddingHorizontal: theme.spacing.md,
         marginHorizontal: theme.spacing.lg,
         marginTop: theme.spacing.lg,
         marginBottom: theme.spacing.sm,
         borderWidth: 1,
         borderColor: theme.colors.cardBorder,
+    },
+    inputBusca: {
+        flex: 1,
+        height: '100%',
+        color: theme.colors.text.title,
+        fontSize: theme.fontSize.lg,
+        paddingVertical: 0,
+        paddingHorizontal: 0,
+    },
+    botaoLimpar: {
+        padding: theme.spacing.xs,
+        marginLeft: theme.spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    botaoLimparPressionado: {
+        opacity: 0.6,
     },
     historicoWrapper: {
         marginHorizontal: theme.spacing.lg,
@@ -231,6 +301,13 @@ const styles = StyleSheet.create({
     historicoLabel: {
         fontSize: theme.fontSize.xs,
         color: theme.colors.text.muted,
+    },
+    botaoLimparHistorico: {
+        paddingVertical: 2,
+        paddingHorizontal: 4,
+    },
+    itemPressionado: {
+        opacity: 0.7,
     },
     limparText: {
         fontSize: theme.fontSize.xs,
