@@ -63,5 +63,3 @@ MERGE INTO produto (id, nome, preco, descricao, categoria, quantidade, imagem) K
 MERGE INTO produto (id, nome, preco, descricao, categoria, quantidade, imagem) KEY(id) VALUES (58, 'Mochila Trilheira', 280.00, 'Mochila cargueira 50L', 'Lazer', 12, 'https://picsum.photos/seed/58/200');
 MERGE INTO produto (id, nome, preco, descricao, categoria, quantidade, imagem) KEY(id) VALUES (59, 'Skate Montado', 190.00, 'Skate street iniciante', 'Esporte', 25, 'https://picsum.photos/seed/59/200');
 MERGE INTO produto (id, nome, preco, descricao, categoria, quantidade, imagem) KEY(id) VALUES (60, 'Óculos de Natação', 45.00, 'Óculos anti-embaçante', 'Esporte', 80, 'https://picsum.photos/seed/60/200');
-
-ALTER SEQUENCE produto_seq RESTART WITH 61;

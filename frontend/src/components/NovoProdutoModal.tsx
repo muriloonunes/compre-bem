@@ -13,12 +13,12 @@ import {
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 import {useState} from "react";
 import {theme} from "../theme/theme";
-import type {Produto} from "../types/Produto";
+import type {CriarProdutoDTO} from "../types/Produto";
 
 type NovoProdutoModalProps = {
     visible: boolean;
     onClose: () => void;
-    onSave: (produto: Produto) => void;
+    onSave: (produto: CriarProdutoDTO) => void;
 };
 
 type ErrosForm = {
@@ -85,19 +85,17 @@ export default function NovoProdutoModal({
         return Object.keys(novosErros).length === 0;
     }
 
-    function salvar() {
+    async function salvar() {
         if (!validar()) return;
 
         const precoNumerico = Number(preco.trim().replace(',', '.'));
         const quantidadeNumerica = parseInt(quantidade.trim(), 10);
 
-        const novoProduto: Produto = {
-            id: Date.now(),
+        const novoProduto: CriarProdutoDTO = {
             nome: nome.trim(),
             categoria: categoria.trim() || 'Geral',
             preco: Number(precoNumerico.toFixed(2)),
             descricao: descricao.trim(),
-            imagem: `https://picsum.photos/seed/${Date.now()}/200`,
             quantidade: quantidadeNumerica,
         };
 

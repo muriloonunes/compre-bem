@@ -7,3 +7,5 @@ export type Produto = {
     imagem: string;
     quantidade: number;
 };
+
+export type CriarProdutoDTO = Omit<Produto, 'id' | 'imagem'>;

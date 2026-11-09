@@ -18,8 +18,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {theme} from "../theme/theme";
 import {ProdutoItem} from "../components/ProdutoItem";
 import NovoProdutoModal from "../components/NovoProdutoModal";
-import {Produto} from "../types/Produto";
-import {getProdutos} from "../service/produtoService";
+import {CriarProdutoDTO, Produto} from "../types/Produto";
+import {createProduto, getProdutos} from "../service/produtoService";
 import {RootStackParamList} from "../../App";
 
 const CHAVE_HISTORICO = '@compre-bem:historico_busca';
@@ -92,8 +92,15 @@ export default function TelaListaProdutos({navigation}: Props) {
         setHistorico([]);
     }
 
-    function handleAdicionarProduto(novoProduto: Produto) {
-        setProdutos((atuais) => [novoProduto, ...atuais]);
+    async function handleAdicionarProduto(novoProduto: CriarProdutoDTO) {
+        try {
+            const produtoCriado = await createProduto(novoProduto);
+
+            setProdutos((atuais) => [produtoCriado, ...atuais]);
+            setModalVisible(false);
+        } catch (error) {
+            console.error('Erro ao cadastrar produto:', error);
+        }
     }
 
     return (

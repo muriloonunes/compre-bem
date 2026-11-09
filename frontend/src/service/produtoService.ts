@@ -1,4 +1,4 @@
-import {Produto} from "../types/Produto";
+import {CriarProdutoDTO, Produto} from "../types/Produto";
 import {apiFetch} from "./api";
 import {Page} from "../types/api";
 
@@ -23,4 +23,11 @@ export function getProdutos(
 
 export function getProdutoById(produtoId: number): Promise<Produto> {
     return apiFetch<Produto>(`/api/v1/produtos/${produtoId}`);
+}
+
+export function createProduto(produto: CriarProdutoDTO): Promise<Produto> {
+    return apiFetch<Produto>(`/api/v1/produtos`, {
+        method: 'POST',
+        body: JSON.stringify(produto),
+    })
 }
