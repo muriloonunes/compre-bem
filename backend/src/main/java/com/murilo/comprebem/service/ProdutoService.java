@@ -5,6 +5,7 @@ import com.murilo.comprebem.entity.dto.CriarProdutoDTO;
 import com.murilo.comprebem.entity.dto.ProdutoResponseDTO;
 import com.murilo.comprebem.exception.EntidadeNotFound;
 import com.murilo.comprebem.repository.ProdutoRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 public class ProdutoService {
     private final ProdutoRepository produtoRepository;
 
+    @Transactional
     public ProdutoResponseDTO criar(CriarProdutoDTO produtoDTO) {
         Produto produto = new Produto();
 
