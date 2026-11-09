@@ -17,7 +17,7 @@ export function DetalheProduto({produto, carregando, atualizando, erro, onAtuali
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.colors.primary}/>
             </View>
-        )
+        );
     }
 
     return (
@@ -53,6 +53,9 @@ export function DetalheProduto({produto, carregando, atualizando, erro, onAtuali
 
                         <Text style={styles.label}>Preço</Text>
                         <Text style={styles.preco}>R$ {produto.preco.toFixed(2)}</Text>
+
+                        <Text style={styles.label}>Quantidade em Estoque</Text>
+                        <Text style={styles.quantidade}>{produto.quantidade} un.</Text>
 
                         <Text style={styles.label}>Descrição</Text>
                         <Text style={styles.descricao}>{produto.descricao}</Text>
@@ -128,15 +131,20 @@ const styles = StyleSheet.create({
         color: theme.colors.text.body,
         lineHeight: 22,
     },
+    preco: {
+        fontSize: theme.fontSize.base,
+        fontWeight: '600',
+        color: theme.colors.primary,
+        lineHeight: 20,
+    },
+    quantidade: {
+        fontSize: theme.fontSize.base,
+        color: theme.colors.text.body,
+        lineHeight: 22,
+    },
     descricao: {
         fontSize: theme.fontSize.md,
         color: theme.colors.text.muted,
         lineHeight: 20,
-    },
-    preco: {
-        fontSize: theme.fontSize.sm,
-        fontWeight: '600',
-        color: theme.colors.primary,
-        lineHeight: 18,
     },
 });

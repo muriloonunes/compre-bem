@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import type {Produto} from '../types/Produto';
 import {theme} from "../theme/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage/src/AsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CHAVE_FAVORITOS = '@compre-bem:favoritos';
 
@@ -14,7 +14,6 @@ export function ProdutoItem({
     onPress: () => void;
 }) {
     const [favoritos, setFavoritos] = useState<number[]>([]);
-    const [quantidade, setQuantidade] = useState(0);
 
     useEffect(() => {
         AsyncStorage.getItem(CHAVE_FAVORITOS).then((salvo) => {
@@ -48,33 +47,25 @@ export function ProdutoItem({
             <View style={styles.footer}>
                 <Text style={styles.preco}>R$ {produto.preco.toFixed(2)}</Text>
                 <View style={styles.actionsContainer}>
+                    <View style={styles.quantidadeBadge}>
+                        <Text style={styles.quantidadeText}>
+                            Qtd: {produto.quantidade}
+                        </Text>
+                    </View>
                     <TouchableOpacity
                         onPress={() => alternarFavorito(produto.id)}
                         style={styles.favoritoButton}
+                        accessibilityRole="button"
+                        accessibilityLabel="Favoritar produto"
                     >
                         <Text
                             style={[
                                 styles.favoritoIcon,
-                                {color: favoritos ? theme.colors.danger : theme.colors.text.muted}
+                                {color: favoritos.includes(produto.id) ? theme.colors.danger : theme.colors.text.muted}
                             ]}
                         >
                             {favoritos.includes(produto.id) ? '♥' : '♡'}
                         </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setQuantidade(Math.max(0, quantidade - 1))}
-                        style={styles.quantidadeButton}
-                    >
-                        <Text style={styles.quantidadeButtonText}>-</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.quantidadeText}>
-                        {quantidade}
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => setQuantidade(quantidade + 1)}
-                        style={styles.quantidadeButton}
-                    >
-                        <Text style={styles.quantidadeButtonText}>+</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -135,14 +126,25 @@ const styles = StyleSheet.create({
         borderTopColor: theme.colors.cardBorder,
     },
     preco: {
-        fontSize: theme.fontSize.xs,
+        fontSize: theme.fontSize.base,
         fontWeight: '600',
         color: theme.colors.primary,
     },
     actionsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: theme.spacing.xs,
+        gap: theme.spacing.sm,
+    },
+    quantidadeBadge: {
+        backgroundColor: theme.colors.cardBorder,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: 6,
+        borderRadius: theme.borderRadius.sm,
+    },
+    quantidadeText: {
+        color: theme.colors.text.body,
+        fontSize: theme.fontSize.sm,
+        fontWeight: '600',
     },
     favoritoButton: {
         minWidth: 44,
@@ -154,23 +156,5 @@ const styles = StyleSheet.create({
     },
     favoritoIcon: {
         fontSize: theme.fontSize.lg,
-    },
-    quantidadeButton: {
-        minWidth: 44,
-        minHeight: 44,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: theme.colors.cardBorder,
-        borderRadius: theme.borderRadius.sm,
-    },
-    quantidadeButtonText: {
-        color: theme.colors.text.title,
-        fontWeight: 'bold',
-        fontSize: theme.fontSize.lg,
-    },
-    quantidadeText: {
-        color: theme.colors.text.title,
-        minWidth: 28,
-        textAlign: 'center',
     },
 });

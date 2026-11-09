@@ -24,6 +24,7 @@ type NovoProdutoModalProps = {
 type ErrosForm = {
     nome?: string;
     preco?: string;
+    quantidade?: string;
     descricao?: string;
 };
 
@@ -35,6 +36,7 @@ export default function NovoProdutoModal({
     const [nome, setNome] = useState('');
     const [categoria, setCategoria] = useState('');
     const [preco, setPreco] = useState('');
+    const [quantidade, setQuantidade] = useState('');
     const [descricao, setDescricao] = useState('');
     const [erros, setErros] = useState<ErrosForm>({});
 
@@ -42,6 +44,7 @@ export default function NovoProdutoModal({
         setNome('');
         setCategoria('');
         setPreco('');
+        setQuantidade('');
         setDescricao('');
         setErros({});
     }
@@ -65,6 +68,15 @@ export default function NovoProdutoModal({
         } else if (isNaN(precoNumerico) || precoNumerico <= 0) {
             novosErros.preco = 'Informe um preço válido maior que zero.';
         }
+
+        const quantidadeLimpa = quantidade.trim();
+        const quantidadeNumerica = parseInt(quantidadeLimpa, 10);
+        if (!quantidadeLimpa) {
+            novosErros.quantidade = 'A quantidade é obrigatória.';
+        } else if (isNaN(quantidadeNumerica) || quantidadeNumerica <= 0) {
+            novosErros.quantidade = 'Informe uma quantidade válida maior que zero.';
+        }
+
         if (!descricao.trim()) {
             novosErros.descricao = 'A descrição é obrigatória.';
         }
@@ -77,6 +89,7 @@ export default function NovoProdutoModal({
         if (!validar()) return;
 
         const precoNumerico = Number(preco.trim().replace(',', '.'));
+        const quantidadeNumerica = parseInt(quantidade.trim(), 10);
 
         const novoProduto: Produto = {
             id: Date.now(),
@@ -85,6 +98,7 @@ export default function NovoProdutoModal({
             preco: Number(precoNumerico.toFixed(2)),
             descricao: descricao.trim(),
             imagem: `https://picsum.photos/seed/${Date.now()}/200`,
+            quantidade: quantidadeNumerica,
         };
 
         onSave(novoProduto);
@@ -150,18 +164,18 @@ export default function NovoProdutoModal({
                             {erros.nome ? <Text style={styles.errorText}>{erros.nome}</Text> : null}
                         </View>
 
-                        <View style={styles.formRow}>
-                            <View style={styles.formCol}>
-                                <Text style={styles.inputLabel}>Categoria</Text>
-                                <TextInput
-                                    style={styles.modalInput}
-                                    placeholder="Ex: Móveis"
-                                    placeholderTextColor={theme.colors.text.placeholder}
-                                    value={categoria}
-                                    onChangeText={setCategoria}
-                                />
-                            </View>
+                        <View style={styles.formCol}>
+                            <Text style={styles.inputLabel}>Categoria</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="Ex: Móveis"
+                                placeholderTextColor={theme.colors.text.placeholder}
+                                value={categoria}
+                                onChangeText={setCategoria}
+                            />
+                        </View>
 
+                        <View style={styles.formRow}>
                             <View style={styles.formCol}>
                                 <Text style={styles.inputLabel}>Preço (R$) *</Text>
                                 <TextInput
@@ -180,10 +194,30 @@ export default function NovoProdutoModal({
                                 />
                                 {erros.preco ? <Text style={styles.errorText}>{erros.preco}</Text> : null}
                             </View>
+
+                            <View style={styles.formCol}>
+                                <Text style={styles.inputLabel}>Quantidade *</Text>
+                                <TextInput
+                                    style={[
+                                        styles.modalInput,
+                                        erros.quantidade ? styles.inputError : null,
+                                    ]}
+                                    placeholder="Ex: 10"
+                                    placeholderTextColor={theme.colors.text.placeholder}
+                                    keyboardType="numeric"
+                                    value={quantidade}
+                                    onChangeText={(text) => {
+                                        const apenasNumeros = text.replace(/[^0-9]/g, '');
+                                        setQuantidade(apenasNumeros);
+                                        if (erros.quantidade) setErros((prev) => ({...prev, quantidade: undefined}));
+                                    }}
+                                />
+                                {erros.quantidade ? <Text style={styles.errorText}>{erros.quantidade}</Text> : null}
+                            </View>
                         </View>
 
                         <View style={styles.formCol}>
-                            <Text style={styles.inputLabel}>Descrição</Text>
+                            <Text style={styles.inputLabel}>Descrição *</Text>
                             <TextInput
                                 style={[styles.modalInput, styles.textAreaInput,
                                     erros.descricao ? styles.inputError : null,
@@ -197,9 +231,9 @@ export default function NovoProdutoModal({
                                 onChangeText={(text) => {
                                     setDescricao(text);
                                     if (erros.descricao) setErros((prev) => ({...prev, descricao: undefined}));
-                                }
-                                }
+                                }}
                             />
+                            {erros.descricao ? <Text style={styles.errorText}>{erros.descricao}</Text> : null}
                         </View>
                     </ScrollView>
 
