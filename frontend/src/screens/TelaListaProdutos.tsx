@@ -92,15 +92,10 @@ export default function TelaListaProdutos({navigation}: Props) {
         setHistorico([]);
     }
 
-    async function handleAdicionarProduto(novoProduto: CriarProdutoDTO) {
-        try {
-            const produtoCriado = await createProduto(novoProduto);
+    async function handleAdicionarProduto(dados: CriarProdutoDTO) {
+        const novoProduto = await createProduto(dados);
 
-            setProdutos((atuais) => [produtoCriado, ...atuais]);
-            setModalVisible(false);
-        } catch (error) {
-            console.error('Erro ao cadastrar produto:', error);
-        }
+        setProdutos((atual) => [novoProduto, ...atual]);
     }
 
     return (

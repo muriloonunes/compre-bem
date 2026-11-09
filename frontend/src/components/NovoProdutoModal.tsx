@@ -1,4 +1,5 @@
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -18,7 +19,7 @@ import type {CriarProdutoDTO} from "../types/Produto";
 type NovoProdutoModalProps = {
     visible: boolean;
     onClose: () => void;
-    onSave: (produto: CriarProdutoDTO) => void;
+    onSave: (produto: CriarProdutoDTO) => Promise<void>;
 };
 
 type ErrosForm = {
@@ -28,17 +29,22 @@ type ErrosForm = {
     descricao?: string;
 };
 
-export default function NovoProdutoModal({
-                                             visible,
-                                             onClose,
-                                             onSave,
-                                         }: NovoProdutoModalProps) {
+export default function NovoProdutoModal(
+    {
+        visible,
+        onClose,
+        onSave,
+    }: NovoProdutoModalProps
+) {
     const [nome, setNome] = useState('');
     const [categoria, setCategoria] = useState('');
     const [preco, setPreco] = useState('');
     const [quantidade, setQuantidade] = useState('');
     const [descricao, setDescricao] = useState('');
     const [erros, setErros] = useState<ErrosForm>({});
+
+    const [salvando, setSalvando] = useState(false);
+    const [erroApi, setErroApi] = useState<string | null>(null);
 
     function limparFormulario() {
         setNome('');
@@ -50,7 +56,11 @@ export default function NovoProdutoModal({
     }
 
     function fechar() {
+        if (salvando) return;
+
         limparFormulario();
+        setErroApi(null);
+
         onClose();
     }
 
@@ -99,8 +109,19 @@ export default function NovoProdutoModal({
             quantidade: quantidadeNumerica,
         };
 
-        onSave(novoProduto);
-        fechar();
+        try {
+            setSalvando(true)
+            setErroApi(null)
+
+            await onSave(novoProduto);
+
+            fechar();
+        } catch (error: any) {
+            setErroApi(error.message || 'Não foi possível salvar o produto. Tente novamente.');
+        } finally {
+            setSalvando(false)
+        }
+
     }
 
     return (
@@ -153,6 +174,7 @@ export default function NovoProdutoModal({
                                 ]}
                                 placeholder="Ex: Cadeira Gamer Ergonômica"
                                 placeholderTextColor={theme.colors.text.placeholder}
+                                editable={!salvando}
                                 value={nome}
                                 onChangeText={(text) => {
                                     setNome(text);
@@ -168,6 +190,7 @@ export default function NovoProdutoModal({
                                 style={styles.modalInput}
                                 placeholder="Ex: Móveis"
                                 placeholderTextColor={theme.colors.text.placeholder}
+                                editable={!salvando}
                                 value={categoria}
                                 onChangeText={setCategoria}
                             />
@@ -185,6 +208,7 @@ export default function NovoProdutoModal({
                                     placeholderTextColor={theme.colors.text.placeholder}
                                     keyboardType="numeric"
                                     value={preco}
+                                    editable={!salvando}
                                     onChangeText={(text) => {
                                         setPreco(text);
                                         if (erros.preco) setErros((prev) => ({...prev, preco: undefined}));
@@ -204,6 +228,7 @@ export default function NovoProdutoModal({
                                     placeholderTextColor={theme.colors.text.placeholder}
                                     keyboardType="numeric"
                                     value={quantidade}
+                                    editable={!salvando}
                                     onChangeText={(text) => {
                                         const apenasNumeros = text.replace(/[^0-9]/g, '');
                                         setQuantidade(apenasNumeros);
@@ -223,6 +248,7 @@ export default function NovoProdutoModal({
                                 placeholder="Breve descrição e detalhes do produto..."
                                 placeholderTextColor={theme.colors.text.placeholder}
                                 multiline={true}
+                                editable={!salvando}
                                 numberOfLines={3}
                                 textAlignVertical="top"
                                 value={descricao}
@@ -235,22 +261,37 @@ export default function NovoProdutoModal({
                         </View>
                     </ScrollView>
 
+                    {erroApi && (
+                        <View style={styles.bannerErro}>
+                            <MaterialDesignIcons name="alert-circle-outline" size={20} color={theme.colors.danger}/>
+                            <Text style={styles.textoBannerErro}>{erroApi}</Text>
+                        </View>
+                    )}
+
                     <View style={styles.modalFooter}>
                         <TouchableOpacity
                             style={styles.buttonCancel}
                             onPress={fechar}
+                            disabled={salvando}
                             activeOpacity={0.7}
                         >
                             <Text style={styles.buttonCancelText}>Cancelar</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={styles.buttonSave}
+                            style={[styles.buttonSave, salvando && {opacity: 0.7}]}
                             onPress={salvar}
+                            disabled={salvando}
                             activeOpacity={0.8}
                         >
-                            <MaterialDesignIcons name="check" size={18} color={theme.colors.text.contrast}/>
-                            <Text style={styles.buttonSaveText}>Salvar</Text>
+                            {salvando ? (
+                                <ActivityIndicator size="small" color={theme.colors.text.contrast} />
+                            ) : (
+                                <>
+                                    <MaterialDesignIcons name="check" size={18} color={theme.colors.text.contrast}/>
+                                    <Text style={styles.buttonSaveText}>Salvar</Text>
+                                </>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -358,6 +399,25 @@ const styles = StyleSheet.create({
         height: 80,
         paddingTop: 10,
         paddingBottom: 10,
+    },
+    bannerErro: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: theme.spacing.sm,
+        marginBottom: theme.spacing.xs,
+        marginRight: theme.spacing.sm,
+        backgroundColor: `${theme.colors.danger}15`,
+        borderWidth: 1,
+        borderColor: theme.colors.danger,
+        borderRadius: theme.borderRadius.md,
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+    },
+    textoBannerErro: {
+        flex: 1,
+        color: theme.colors.danger,
+        fontSize: theme.fontSize.sm,
+        lineHeight: 18,
     },
     modalFooter: {
         flexDirection: 'row',
