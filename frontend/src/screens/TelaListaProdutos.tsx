@@ -21,6 +21,7 @@ import NovoProdutoModal from "../components/NovoProdutoModal";
 import {CriarProdutoDTO, Produto} from "../types/Produto";
 import {createProduto, getProdutos} from "../service/produtoService";
 import {RootStackParamList} from "../../App";
+import {useFocusEffect} from "@react-navigation/native";
 
 const CHAVE_HISTORICO = '@compre-bem:historico_busca';
 
@@ -46,7 +47,7 @@ export default function TelaListaProdutos({navigation}: Props) {
             }
             setErro(null);
 
-            const resposta = await getProdutos(0, 20, 'id,asc', busca);
+            const resposta = await getProdutos(0, 20, 'id,desc', busca);
             setProdutos(resposta.content ?? []);
         } catch (err: any) {
             console.error('Erro ao buscar produtos:', err);
@@ -57,9 +58,11 @@ export default function TelaListaProdutos({navigation}: Props) {
         }
     }, [busca]);
 
-    useEffect(() => {
-        carregarProdutos();
-    }, [carregarProdutos]);
+    useFocusEffect(
+        useCallback(() => {
+            carregarProdutos();
+        }, [carregarProdutos])
+    );
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -220,7 +223,10 @@ export default function TelaListaProdutos({navigation}: Props) {
                         <ProdutoItem
                             produto={item}
                             onPress={() =>
-                                navigation.navigate('DetalheProduto', {produtoId: item.id})
+                                navigation.navigate('DetalheProduto', {
+                                    produtoId: item.id,
+                                    nome: item.nome,
+                                })
                             }
                         />
                     )}

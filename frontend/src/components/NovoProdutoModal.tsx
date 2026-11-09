@@ -285,7 +285,7 @@ export default function NovoProdutoModal(
                             activeOpacity={0.8}
                         >
                             {salvando ? (
-                                <ActivityIndicator size="small" color={theme.colors.text.contrast} />
+                                <ActivityIndicator size="small" color={theme.colors.text.contrast}/>
                             ) : (
                                 <>
                                     <MaterialDesignIcons name="check" size={18} color={theme.colors.text.contrast}/>

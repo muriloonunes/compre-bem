@@ -4,40 +4,47 @@ import {StatusBar} from 'expo-status-bar';
 import TelaListaProdutos from './src/screens/TelaListaProdutos';
 import TelaDetalheProduto from './src/screens/TelaDetalheProduto';
 import {theme} from './src/theme/theme';
+import Toast from "react-native-toast-message";
 
 export type RootStackParamList = {
     ListaProdutos: undefined;
-    DetalheProduto: { produtoId: number };
+    DetalheProduto: { produtoId: number; nome?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
     return (
-        <NavigationContainer>
-            <StatusBar style="light"/>
-            <Stack.Navigator
-                initialRouteName="ListaProdutos"
-                screenOptions={{
-                    headerStyle: {backgroundColor: theme.colors.background},
-                    headerTintColor: theme.colors.text.title,
-                    headerTitleStyle: {fontWeight: 'bold'},
-                    contentStyle: {backgroundColor: theme.colors.background},
-                }}
-            >
-                <Stack.Screen
-                    name="ListaProdutos"
-                    component={TelaListaProdutos}
-                    options={{headerShown: false}}
-                />
-                <Stack.Screen name="DetalheProduto">
-                    {(props) => (
-                        <TelaDetalheProduto
-                            {...props}
-                        />
-                    )}
-                </Stack.Screen>
-            </Stack.Navigator>
-        </NavigationContainer>
+        <>
+            <NavigationContainer>
+                <StatusBar style="light"/>
+                <Stack.Navigator
+                    initialRouteName="ListaProdutos"
+                    screenOptions={{
+                        headerStyle: {backgroundColor: theme.colors.background},
+                        headerTintColor: theme.colors.text.title,
+                        headerTitleStyle: {fontWeight: 'bold'},
+                        contentStyle: {backgroundColor: theme.colors.background},
+                    }}
+                >
+                    <Stack.Screen
+                        name="ListaProdutos"
+                        component={TelaListaProdutos}
+                        options={{headerShown: false}}
+                    />
+                    <Stack.Screen
+                        name="DetalheProduto"
+                        component={TelaDetalheProduto}
+                        options={({route}) => ({
+                            title: route.params.nome || 'Detalhes do Produto',
+                        })}
+                    />
+                </Stack.Navigator>
+            </NavigationContainer>
+
+            <Toast
+                position="bottom"
+            />
+        </>
     );
 }
