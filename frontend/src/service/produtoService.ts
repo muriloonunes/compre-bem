@@ -32,6 +32,13 @@ export function createProduto(produto: CriarProdutoDTO): Promise<Produto> {
     })
 }
 
+export function updateProduto(produtoId: number, produto: CriarProdutoDTO): Promise<Produto> {
+    return apiFetch<Produto>(`/api/v1/produtos/${produtoId}`, {
+        method: 'PUT',
+        body: JSON.stringify(produto),
+    })
+}
+
 export function deleteProduto(produtoId: number): Promise<void> {
     return apiFetch<void>(`/api/v1/produtos/${produtoId}`, {
         method: 'DELETE',

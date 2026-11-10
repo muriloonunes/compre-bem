@@ -1,12 +1,13 @@
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {DetalheProduto} from "../components/DetalheProduto";
-import {Produto} from "../types/Produto";
+import {CriarProdutoDTO, Produto} from "../types/Produto";
 import {useCallback, useEffect, useLayoutEffect, useState} from "react";
-import {deleteProduto, getProdutoById} from "../service/produtoService";
-import {ActivityIndicator, Alert, TouchableOpacity} from "react-native";
+import {deleteProduto, getProdutoById, updateProduto} from "../service/produtoService";
+import {ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View} from "react-native";
 import {theme} from "../theme/theme";
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 import Toast from "react-native-toast-message";
+import NovoProdutoModal from "../components/NovoProdutoModal";
 
 type RootStackParamList = {
     ListaProdutos: undefined;
@@ -22,6 +23,7 @@ export default function TelaDetalheProduto({route, navigation}: Props) {
     const [atualizando, setAtualizando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
     const [excluindo, setExcluindo] = useState(false);
+    const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
     const carregarProduto = useCallback(async (isRefresh = false) => {
         try {
@@ -71,38 +73,100 @@ export default function TelaDetalheProduto({route, navigation}: Props) {
         )
     }
 
+    async function handleSalvarEdicao(dadosAtualizados: CriarProdutoDTO) {
+        const produtoAtualizado = await updateProduto(produtoId, dadosAtualizados);
+        setProduto(produtoAtualizado);
+    }
+
     useEffect(() => {
         carregarProduto()
     }, [carregarProduto])
 
     useLayoutEffect(() => {
         navigation.setOptions({
-            title: produto?.nome || 'Detalhes do Produto',
-            headerRight: () => (
-                excluindo ? (
-                    <ActivityIndicator size="small" color={theme.colors.danger}/>
-                ) : (
-                    <TouchableOpacity
-                        onPress={confirmarExclusao}
-                        disabled={excluindo}
-                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                    >
-                        <MaterialDesignIcons
-                            name="trash-can-outline"
-                            size={22}
-                            color={theme.colors.danger}
-                        />
-                    </TouchableOpacity>
-                )
-            )
-        })
-    }, [navigation, produto, excluindo])
+            title: produto?.nome || "Detalhes",
+            headerRight: () => {
+                if (!produto) return null;
 
-    return <DetalheProduto
-        produto={produto}
-        carregando={carregando}
-        atualizando={atualizando}
-        erro={erro}
-        onAtualizar={() => carregarProduto(true)}
-    />;
+                if (excluindo) {
+                    return (
+                        <View style={styles.headerActions}>
+                            <ActivityIndicator size="small" color={theme.colors.danger} />
+                        </View>
+                    );
+                }
+
+                return (
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity
+                            onPress={() => setModalEditarAberto(true)}
+                            disabled={excluindo}
+                            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                            style={styles.headerButton}
+                            accessibilityLabel="Editar produto"
+                            accessibilityRole="button"
+                        >
+                            <MaterialDesignIcons
+                                name="pencil-outline"
+                                size={22}
+                                color={theme.colors.primary}
+                            />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={confirmarExclusao}
+                            disabled={excluindo}
+                            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                            style={styles.headerButton}
+                            accessibilityLabel="Excluir produto"
+                            accessibilityRole="button"
+                        >
+                            <MaterialDesignIcons
+                                name="trash-can-outline"
+                                size={22}
+                                color={theme.colors.danger}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                );
+            },
+        });
+    }, [navigation, produto, excluindo]);
+
+    return (
+        <View style={styles.container}>
+            <DetalheProduto
+                produto={produto}
+                carregando={carregando}
+                atualizando={atualizando}
+                erro={erro}
+                onAtualizar={() => carregarProduto(true)}
+            />
+
+            <NovoProdutoModal
+                visible={modalEditarAberto}
+                onClose={() => setModalEditarAberto(false)}
+                onSave={handleSalvarEdicao}
+                produtoEditar={produto}
+            />
+        </View>
+    )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: theme.colors.background,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: theme.spacing.md,
+        paddingRight: theme.spacing.xs,
+    },
+    headerButton: {
+        padding: theme.spacing.xs,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});

@@ -12,14 +12,15 @@ import {
     View,
 } from "react-native";
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {theme} from "../theme/theme";
-import type {CriarProdutoDTO} from "../types/Produto";
+import type {CriarProdutoDTO, Produto} from "../types/Produto";
 
 type NovoProdutoModalProps = {
     visible: boolean;
     onClose: () => void;
     onSave: (produto: CriarProdutoDTO) => Promise<void>;
+    produtoEditar?: Produto | null
 };
 
 type ErrosForm = {
@@ -34,8 +35,11 @@ export default function NovoProdutoModal(
         visible,
         onClose,
         onSave,
+        produtoEditar
     }: NovoProdutoModalProps
 ) {
+    const isEdicao = !!produtoEditar;
+
     const [nome, setNome] = useState('');
     const [categoria, setCategoria] = useState('');
     const [preco, setPreco] = useState('');
@@ -45,6 +49,22 @@ export default function NovoProdutoModal(
 
     const [salvando, setSalvando] = useState(false);
     const [erroApi, setErroApi] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (visible) {
+            setErros({});
+            setErroApi(null);
+            if (produtoEditar) {
+                setNome(produtoEditar.nome);
+                setCategoria(produtoEditar.categoria || '');
+                setPreco(produtoEditar.preco.toString());
+                setQuantidade(produtoEditar.quantidade.toString());
+                setDescricao(produtoEditar.descricao);
+            } else {
+                limparFormulario();
+            }
+        }
+    }, [visible, produtoEditar]);
 
     function limparFormulario() {
         setNome('');
@@ -96,12 +116,12 @@ export default function NovoProdutoModal(
     }
 
     async function salvar() {
-        if (!validar()) return;
+        if (!validar() || salvando) return;
 
         const precoNumerico = Number(preco.trim().replace(',', '.'));
         const quantidadeNumerica = parseInt(quantidade.trim(), 10);
 
-        const novoProduto: CriarProdutoDTO = {
+        const dados: CriarProdutoDTO = {
             nome: nome.trim(),
             categoria: categoria.trim() || 'Geral',
             preco: Number(precoNumerico.toFixed(2)),
@@ -110,19 +130,17 @@ export default function NovoProdutoModal(
         };
 
         try {
-            setSalvando(true)
-            setErroApi(null)
-
-            await onSave(novoProduto);
-
+            setSalvando(true);
+            setErroApi(null);
+            await onSave(dados);
             fechar();
         } catch (error: any) {
-            setErroApi(error.message || 'Não foi possível salvar o produto. Tente novamente.');
+            setErroApi(error.message || 'Falha ao salvar produto.');
         } finally {
-            setSalvando(false)
+            setSalvando(false);
         }
-
     }
+
 
     return (
         <Modal
@@ -144,16 +162,17 @@ export default function NovoProdutoModal(
                         <View style={styles.modalHeaderTitleGroup}>
                             <View style={styles.modalHeaderIconContainer}>
                                 <MaterialDesignIcons
-                                    name="package-variant-closed-plus"
+                                    name={isEdicao ? "pencil" : "package-variant-closed-plus"}
                                     size={20}
                                     color={theme.colors.primary}
                                 />
                             </View>
-                            <Text style={styles.modalTitle}>Adicionar Produto</Text>
+                            <Text style={styles.modalTitle}>{isEdicao ? 'Editar Produto' : 'Adicionar Produto'}</Text>
                         </View>
                         <TouchableOpacity
                             onPress={fechar}
-                            style={styles.closeButton}
+                            disabled={salvando}
+                            style={[styles.closeButton, salvando && {opacity: 0.5}]}
                             hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                         >
                             <MaterialDesignIcons name="close" size={20} color={theme.colors.text.muted}/>
