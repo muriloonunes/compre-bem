@@ -22,8 +22,10 @@ import {CriarProdutoDTO, Produto} from "../types/Produto";
 import {createProduto, getProdutos} from "../service/produtoService";
 import {RootStackParamList} from "../../App";
 import {useFocusEffect} from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 const CHAVE_HISTORICO = '@compre-bem:historico_busca';
+const ITENS_POR_PAGINA = 20;
 
 type Props = {
     navigation: NativeStackNavigationProp<RootStackParamList, 'ListaProdutos'>;
@@ -38,7 +40,11 @@ export default function TelaListaProdutos({navigation}: Props) {
     const [historico, setHistorico] = useState<string[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const carregarProdutos = useCallback(async (isRefresh = false) => {
+    const [pagina, setPagina] = useState(0);
+    const [isUltimaPagina, setIsUltimaPagina] = useState(false);
+    const [carregandoMais, setCarregandoMais] = useState(false);
+
+    const carregarPrimeiraPag = useCallback(async (isRefresh = false) => {
         try {
             if (isRefresh) {
                 setAtualizando(true);
@@ -47,7 +53,7 @@ export default function TelaListaProdutos({navigation}: Props) {
             }
             setErro(null);
 
-            const resposta = await getProdutos(0, 20, 'id,desc', busca);
+            const resposta = await getProdutos(0, ITENS_POR_PAGINA, 'id,desc', busca);
             setProdutos(resposta.content ?? []);
         } catch (err: any) {
             console.error('Erro ao buscar produtos:', err);
@@ -58,19 +64,52 @@ export default function TelaListaProdutos({navigation}: Props) {
         }
     }, [busca]);
 
+    async function carregarMaisProdutos() {
+        if (carregando || carregandoMais || atualizando || isUltimaPagina) {
+            return;
+        }
+
+        try {
+            setCarregandoMais(true);
+
+            const proximaPagina = pagina + 1;
+
+            const resposta = await getProdutos(proximaPagina, ITENS_POR_PAGINA, 'id,desc', busca);
+            const novosItens = resposta.content ?? [];
+
+            setProdutos((atual) => {
+                const idsExistentes = new Set(atual.map((item) => item.id));
+                const itensFiltrados = novosItens.filter((item) => !idsExistentes.has(item.id));
+                return [...atual, ...itensFiltrados];
+            })
+
+            setPagina(proximaPagina);
+            setIsUltimaPagina(resposta.last);
+        } catch (err: any) {
+            console.error('Erro ao carregar mais produtos:', err);
+            Toast.show({
+                type: "error",
+                text1: "Erro ao carregar mais produtos",
+            })
+        } finally {
+            setCarregandoMais(false);
+        }
+    }
+
     useFocusEffect(
         useCallback(() => {
-            carregarProdutos();
-        }, [carregarProdutos])
+            carregarPrimeiraPag();
+        }, [carregarPrimeiraPag])
     );
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            carregarProdutos();
+            carregarPrimeiraPag();
         }, 400);
 
         return () => clearTimeout(timer);
-    }, [busca]);
+    }, [carregarPrimeiraPag]);
+
 
     useEffect(() => {
         AsyncStorage.getItem(CHAVE_HISTORICO).then((salvo) => {
@@ -197,7 +236,7 @@ export default function TelaListaProdutos({navigation}: Props) {
             ) : erro && produtos.length === 0 ? (
                 <View style={styles.centerContainer}>
                     <Text style={styles.errorText}>{erro}</Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={() => carregarProdutos()}>
+                    <TouchableOpacity style={styles.retryButton} onPress={() => carregarPrimeiraPag()}>
                         <Text style={styles.retryButtonText}>Tentar novamente</Text>
                     </TouchableOpacity>
                 </View>
@@ -209,7 +248,7 @@ export default function TelaListaProdutos({navigation}: Props) {
                     refreshControl={
                         <RefreshControl
                             refreshing={atualizando}
-                            onRefresh={() => carregarProdutos(true)}
+                            onRefresh={() => carregarPrimeiraPag(true)}
                             tintColor={theme.colors.primary}
                             colors={[theme.colors.primary]}
                         />
@@ -230,6 +269,17 @@ export default function TelaListaProdutos({navigation}: Props) {
                             }
                         />
                     )}
+                    onEndReached={carregarMaisProdutos}
+                    onEndReachedThreshold={0.3}
+                    ListFooterComponent={
+                        carregandoMais ? (
+                            <View style={styles.footerLoader}>
+                                <ActivityIndicator size="small" color={theme.colors.primary}/>
+                            </View>
+                        ) : (
+                            <></>
+                        )
+                    }
                 />
             )}
         </SafeAreaView>
@@ -342,6 +392,11 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.xxl,
         width: '100%',
         alignSelf: 'center',
+    },
+    footerLoader: {
+        paddingVertical: theme.spacing.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     centerContainer: {
         flex: 1,
